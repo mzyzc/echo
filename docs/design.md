@@ -1,20 +1,23 @@
 # Message structure
 
+```
 message_object:
     message_text: string
     sender_ip: int[]
     receipient_ip: int[]
     date_sent: dateTime
     isHashed: bool
+```
 
 # Process
 
-[User1] <--> {Server} <--> [User2]
+`[User1] <--> {Server} <--> [User2]`
 
 Note that User1 and User2 are equivalent; the distinction is only made for clarity and consistency in the explanations
 
-[Function] --> [Public Key]+[Private Key]
-[Session Key]+[Message] --> [Function] --> [Hashed Message]
+`[Function] --> [Public Key]+[Private Key]`
+
+`[Session Key]+[Message] --> [Function] --> [Hashed Message]`
 
 1. Exchange key pairs
     1. User1 generates a key pair
@@ -57,6 +60,7 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
 
 # Functions
 
+```
 generateKeyPair() -> (publicKey, privateKey)
 generateSessionKey() -> sessionKey
 encryptSessionKey(sessionKey, publicKey) -> sessionKey
@@ -65,8 +69,8 @@ buildMessage(data, media_type) -> message_object
 sendMessage(message_object, (dest_ip, dest_port))
 encryptMessage(message_object) -> message_object
 decryptMessage(message_object) -> message_object
+```
 
 # Explanations
 
 I chose to use a 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly. This lowers the latency between sending and receiving messages while still providing the benefits of asymmetric encryption when sharing the symmetric key.
-
