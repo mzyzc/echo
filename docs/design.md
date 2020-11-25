@@ -24,9 +24,6 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
     2. User2 generates a key pair
     3. User1 sends their public key to User2 via plaintext
     4. User2 sends their public key to User1 via plaintext
-    5. User1 generates a symmetric key and encrypts it with User2's public key
-    6. User1 sends the encrypted symmetric key to User2
-    7. User2 decrypts the encrypted symmetric key
 2. Establish a session key
     1. User1 generates a symmetric key and encrypts it with User2's public key
     2. User1 sends the encrypted symmetric key to User2
