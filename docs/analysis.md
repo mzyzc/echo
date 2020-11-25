@@ -11,15 +11,6 @@ With the growing importance of technology in our world, it is important that peo
 #### Unencrypted
 
 - SMS
-- Email
-- Instant messaging apps
-
-#### The problem with them
-
-**No encryption** is a cardinal sin:
-
-- SMS is unencrypted
-- Facebook Messenger is unencrypted
 
 SMS is a basic set of protocols with no built-in support for encryption. An app called Silence offers the ability to send encrypted SMS messages between its users. Since SMS doesn't support rich text formatting, is carrier-dependent, and is also declining in use, I would like to use a less-restricting technology.
 
