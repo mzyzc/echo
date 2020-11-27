@@ -1,4 +1,6 @@
-# Message structure
+# Design
+
+## Message structure
 
 ```
 message_object:
@@ -9,7 +11,7 @@ message_object:
     isHashed: bool
 ```
 
-# Process
+## Process
 
 `[User1] <--> {Server} <--> [User2]`
 
@@ -41,7 +43,7 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
     2. User2 decrypts message using the symmetric key
     2. Message displayed on User2 client
 
-# Database structure
+## Database structure
 
 - Users
     - ID
@@ -55,7 +57,7 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
     - Sender[Users]
     - Receipient[Users]
 
-# Functions
+## Functions
 
 ```
 generateKeyPair() -> (publicKey, privateKey)
@@ -68,6 +70,6 @@ encryptMessage(message_object) -> message_object
 decryptMessage(message_object) -> message_object
 ```
 
-# Explanations
+## Explanations
 
 I chose to use a 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly. This lowers the latency between sending and receiving messages while still providing the benefits of asymmetric encryption when sharing the symmetric key.
