@@ -1,6 +1,6 @@
 # Echo
 
-Echo is an secure messaging application
+Echo is a secure messaging application.
 
 ## Documents
 
