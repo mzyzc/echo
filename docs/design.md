@@ -13,13 +13,13 @@ message_object:
 
 ## Process
 
-`[User1] <--> {Server} <--> [User2]`
+![User1 and User2 communicating with a server](../assets/client-server.svg)
 
 Note that User1 and User2 are equivalent; the distinction is only made for clarity and consistency in the explanations
 
-`[Function] --> [Public Key]+[Private Key]`
+![A function generates a public and a private key](../assets/key-pair.svg)
 
-`[Session Key]+[Message] --> [Function] --> [Hashed Message]`
+![A message and a session key are passed through a function to produce a hashed message](../assets/encrypt-message.svg)
 
 1. Exchange key pairs
     1. User1 generates a key pair
