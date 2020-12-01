@@ -5,21 +5,24 @@
 One of the objectives for this program is that it must work on several platforms. Implementing a native client for all possible devices would require a lot of effort so I have decided that the program will only be accessible through both a native Android app and a web client. The system will be centralised so both clients are able to communicate with each other using the same server. This offers the advantage of both making it simple for users to communicate between platforms in a manageable way.
 
 ![Client-server architecture](../assets/client-server.png)
+
 Note that User1 and User2 are equivalent; the distinction is only made for clarity and consistency in the explanations
 
 Because the server holds the very important role of managing every message sent between users, it is crucial that it manages data swiftly and with minimal errors. I will write it in the Rust programming language due to its strict memory checking features and high performance because I believe these properties complement its purpose very well. Native Android applications can either be written in Java or Kotlin; I've decided to use Java since this is a more familiar language to me and the latter offers no significant benefits for my project. The web client will use HTML and CSS for the user interface and JavaScript for the logic.
 
 At the heart of the system lies the asymmetric system of cryptography. Each user generates a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but it can be quite slow due to its complexity.
 
-![A function generates a public and a private key](../assets/key-pair.png)
+![Generating a key pair](../assets/key-pair.png)
 
 To solve this problem, I have chosen to use a separate 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly. By sharing the session key asymmetrically, the latency between sending and receiving messages is lowered while still providing the benefits of asymmetric encryption.
 
-![A message and a session key are passed through a function to produce a hashed message](../assets/encrypt-message.png)
+![Encrypting a message with a session key](../assets/encrypt-message.png)
 
-To provide an extra layer of security against man-in-the-middle attacks, the program verifies each message using a digital signature. This is created by encrypting the digest (hashed version of message) with the sender's private key and sending it along with the message. When the message arrives, the recipient will decrypt the message using the sender's public key and compare it to a digest they created themselves.
+To provide an extra layer of security against man-in-the-middle attacks, the program verifies each message using a digital signature. This is created by encrypting the digest (hashed version of message) with the sender's private key and sending it along with the message.
 
 ![Creating a signature](../assets/create-sig.png)
+
+ When the message arrives, the recipient will decrypt the message using the sender's public key and compare it to a digest they created themselves.
 
 ![Verifying a signature](../assets/verify-sig.png)
 
@@ -73,7 +76,7 @@ To provide an extra layer of security against man-in-the-middle attacks, the pro
 
 ![Class diagram](../assets/classes.png)
 
-Messages will be stored as an object holding both the message contents and some additional metadata. Since I want the program to support images and video in addition to plaintext, a `media_type` must be specified in the standard MIME format so that the clients know how to interpret the data.
+Since I want the program to support images and video in addition to plaintext, a `media_type` must be specified for each message in the standard MIME format so that clients know how to interpret the data.
 
 ## Database structure
 
