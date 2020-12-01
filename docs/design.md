@@ -6,20 +6,7 @@ One of the objectives for this program is that it must work on several platforms
 
 Because the server holds the very important role of managing every message sent between users, it is crucial that it manages data swiftly and with minimal errors. I will write it in the Rust programming language due to its strict memory checking features and high performance because I believe these properties complement its purpose very well. Native Android applications can either be written in Java or Kotlin; I've decided to use Java since this is a more familiar language to me and the latter offers no significant benefits for my project. The web client will use HTML and CSS for the user interface and JavaScript for the logic.
 
-## Message structure
-
-Messages will be stored as an object holding both the message contents and some additional metadata.
-
-```
-message_object:
-    message_text: string
-    media_type: string
-    timestamp: dateTime
-    sender_id: int
-    signature: string
-```
-
-Since I want the program to support images and video in addition to plaintext, a `media_type` must be specified in the standard MIME format so that the clients know how to interpret the data.
+I chose to use a 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly because asymmetric encryption is relatively slow. This lowers the latency between sending and receiving messages while still providing the benefits of asymmetric encryption while the symmetric key is being shared.
 
 ## Process
 
@@ -31,9 +18,9 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
 
 ![A message and a session key are passed through a function to produce a hashed message](../assets/encrypt-message.png)
 
-## Client logic
+### Client logic
 
-### Sending
+#### Sending
 
 1. Exchange key pairs
     1. User1 generates a key pair
@@ -55,7 +42,7 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
     4. Encrypted message and digest are bundled together
 5. Transmit message to server
 
-### Receiving
+#### Receiving
 
 1. Receive message
     1. User2 decrypts message using the session key
@@ -66,7 +53,7 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
 3. Display message
     1. If signature could not be verified, display a warning to the user
 
-## Server logic
+### Server logic
 
 1. Receive message
 2. Check if user present in database
@@ -74,6 +61,12 @@ Note that User1 and User2 are equivalent; the distinction is only made for clari
     1. If no, add their information and public key
 3. Add message to database
 4. Transmit message to User2
+
+## Classes
+
+![Class diagram](../assets/classes.png)
+
+Messages will be stored as an object holding both the message contents and some additional metadata. Since I want the program to support images and video in addition to plaintext, a `media_type` must be specified in the standard MIME format so that the clients know how to interpret the data.
 
 ## Database structure
 
@@ -103,7 +96,3 @@ sendMessage(message_object, destination)
 encryptMessage(message_object, sessionKey) -> message_object
 decryptMessage(message_object, sessionKey) -> message_object
 ```
-
-## Explanations
-
-I chose to use a 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly because asymmetric encryption is relatively slow. This lowers the latency between sending and receiving messages while still providing the benefits of asymmetric encryption while the symmetric key is being shared.
