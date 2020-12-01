@@ -1,0 +1,9 @@
+flowchart LR
+    Message --> hf[[Hash function]]
+    hf --> d1[Digest 1]
+
+    edigest[Encrypted digest] --> d2[Digest 2]
+    puk[Public key] --> d2[Digest 2]
+
+    d1 --> m[[Match?]]
+    d2 --> m

@@ -1,0 +1,5 @@
+flowchart LR
+    Message --> hf[[Hash function]]
+    hf --> Digest
+    Digest --> edigest[Encrypted digest]
+    prk[Private key] --> edigest[Encrypted digest]
