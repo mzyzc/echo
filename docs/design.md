@@ -105,8 +105,11 @@ generateKeyPair() -> (publicKey, privateKey)
 generateSessionKey() -> sessionKey
 encryptSessionKey(sessionKey, publicKey) -> sessionKey
 decryptSessionKey(sessionKey, privateKey) -> sessionKey
-buildMessage(data, media_type) -> message_object
-sendMessage(message_object, destination)
-encryptMessage(message_object, sessionKey) -> message_object
-decryptMessage(message_object, sessionKey) -> message_object
+generateDigest(messageContents) --> digest
+createSignature(digest, privateKey) --> signature
+decodeSignature(signature, publicKey) --> digest
+buildMessage(data, mediaType) -> message
+sendMessage(message, destination)
+encryptMessage(message, sessionKey) -> message
+decryptMessage(message, sessionKey) -> message
 ```
