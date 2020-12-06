@@ -1,9 +1,6 @@
 [submodule "echo-server"]
 	path = echo-server
 	url = https://github.com/mzyzc/echo-server.git
-[submodule "echo-android"]
-	path = echo-android
-	url = https://github.com/mzyzc/echo-android.git
-[submodule "echo-web"]
-	path = echo-web
-	url = https://github.com/mzyzc/echo-web.git
+[submodule "echo-client"]
+	path = echo-client
+	url = https://github.com/mzyzc/echo-client.git
