@@ -8,11 +8,7 @@ A centralised server will be used for the system so that clients are able to com
 
 ![Client-server architecture](../assets/client-server.png)
 
-Because the server holds the very important role of managing every message sent between users, it is crucial that it manages data swiftly and with minimal errors. I will write it in the Rust programming language due to its strict memory checking features and high performance because I believe these properties complement its purpose very well. Native Android applications can either be written in Java or Kotlin; I've decided to use Java since this is a more familiar language to me and the latter offers no significant benefits for my project. The web client will use HTML and CSS for the user interface and JavaScript for the logic.
-
 The server will be written in the Rust programming language due to its strict memory checking features, high performance, and multithreading support. I believe these properties complement the server's important role as something that manages data swiftly and with minimal errors. My clients will all be written in Dart as this is the language used by the Flutter toolkit; the final Dart code will be compiled to each platforms native application language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
-
-At the heart of the system lies the asymmetric system of cryptography. Each user generates a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but it can be quite slow due to its complexity.
 
 At the core of the system lies the asymmetric method of encryption. Each user will generate a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but can be slow due to its complexity.
 
