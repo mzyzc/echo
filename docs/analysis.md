@@ -87,7 +87,3 @@ One of the major problems the user expressed is secure messaging being "difficul
 Since the program is used for communications, it should aim to maximise the amount of people that are able to access it. The solution to this is to make the app cross-platform so that it is accessible to nearly anyone. Mobile operating systems are a priority due to the nature of the program but many other apps offer a desktop client or web interface as well.
 
 Unfortunately, making an app directly for iOS would be difficult since Apple's requirements for publishing an application to the App Store are very high and they offer no simple way to sideload programs. Hence, I will likely create a web interface for my app to get around this issue.
-
-## Examining similar solutions
-
-...
