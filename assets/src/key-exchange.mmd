@@ -1,0 +1,7 @@
+sequenceDiagram
+    User1->>Server: Send public key
+    Server-->>User2: Relay public key
+    User2->>Server: Send public key
+    Server-->>User1: Relay public key
+    User1->>Server: Send session key
+    Server-->>User2: Relay session key
