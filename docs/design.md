@@ -4,23 +4,25 @@
 
 One objective for this program is working on several platforms. Implementing a native client for every platform individually would require a lot of work and duplicated effort so I have decided to use a cross-platform toolkit called Flutter to create an iOS, Android, and web app.
 
-A centralised server will be used for the system so that clients are able to communicate with each other using the same server. It offers the advantage of making the system easier to manage and allows communication to occur in a platform-agnostic way.
+A centralised server will be used for the system so that clients are able to communicate with each other using the same server. Centralisation offers the advantage of making the system easier to manage and allows communication to occur in a platform-agnostic way.
 
 ![Client-server architecture](../assets/client-server.png)
 
-The server will be written in the Rust programming language due to its strict memory checking features, high performance, and multithreading support. I believe these properties complement the server's important role as something that manages data swiftly and with minimal errors. My clients will all be written in Dart as this is the language used by the Flutter toolkit; the final Dart code will be compiled to each platforms native application language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
+The server will be written in the Rust programming language due to its strict memory checking features, high performance, and multithreading support. I believe these properties complement the server's important role of managing data swiftly and with minimal errors. My client will be written in Dart as this is the language used by the Flutter toolkit; the final Dart code will be compiled to each platforms native application language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
 
 At the core of the system lies the asymmetric method of encryption. Each user will generate a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but can be slow due to its complexity.
 
-The specific algorithm I will be using is ed25519, a member of the elliptic-curve cryptography family of algorithms. After comparing elliptic-curve-based algorithms (ECC) with Rivest-Shamir-Adleman (RSA), I have concluded that ECC is significantly faster at encrypting and decrypting data and uses much smaller key sizes for the same degree of security. This is important because my application will be used largely on mobile phones or possibly other low-power devices. My reason for choosing ed25519 specifically is its signature support, wide availability across platforms, and the fact that, unlike NIST-approved elliptic curves, it is not suspected of possessing a backdoor.
+The specific algorithms I will use are x25519 for exchange and ed25519 for signing. These both come from the elliptic-curve family of algorithms which, compared to Rivest-Shamir-Adleman (RSA), are much faster at converting data and use far smaller key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. My reason for choosing these two over other elliptic-curve algorithms is that implementations of them are available in almost all languages.
 
 ![Generating a key pair](../assets/key-pair.png)
 
-To solve this problem, I will use a separate 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly. This key will be shared via asymmetric encryption, so the increased security from that system will still apply while the session key offers decreased latency.
+To solve this problem, I will use a separate 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly. Since it is obtained via the key pairs, it inherits a lot of the benefits of asymmetric cryptography while being much faster and less computationally-expensive.
+
+Instead of generating a completely new key and sharing it between users, I am instead creating it from the recipient's private key and the sender's public key. The benefit of this is not having to pass the key across a network, reducing overhead and making it immune to man-in-the-middle interception.
 
 ![Encrypting a message with a session key](../assets/encrypt-message.png)
 
-To provide an extra layer of security against man-in-the-middle attacks, the program verifies the sender of each message using a digital signature. This is created by encrypting the digest (hashed version of message) with the sender's private key and sending it along with the message.
+As an extra layer of security against man-in-the-middle attacks, the program verifies the sender of each message using a digital signature. This is created by encrypting the digest (hashed version of message) with the sender's private key and sending it along with the message.
 
 ![Creating a signature](../assets/create-sig.png)
 
@@ -28,7 +30,11 @@ Once the user receives the message, they can create their own digest and compare
 
 ![Verifying a signature](../assets/verify-sig.png)
 
-Messages will be sent in JSON form (due to its conciseness and ubiquity as a data exchange format) over a secure TLS connection. The server will have no knowledge of what the contents of the messages it receives are and will store them in a database in hashed form so that information can remain safe even if the server is compromised.
+When the client initialises, it will create a persistent TCP connection with the server that will stay open until the app is closed. I chose this approach because of its simplicity; the server does not have to keep track of who connects to it or initiate connections with them.
+
+Clients will encode messages in JSON form (due to its ubiquity as a data exchange format) and send them over a secure TLS connection. The server has no knowledge of the precise contents of the messages it receives and will only move them in and out of the database. This keeps the data secure even if the server was to be compromised.
+
+On the server, a TCP listener is bound to port 63100 (not used in any major software). It accepts incoming connections asynchronously (to maximise performance) and continuously polls the client (every 500 ms) to maintain a connection. Echo uses the MySQL database which the server will connect to when initialising. Data will be read from or written to this database depending on what the client is asking for.
 
 ## Process
 
@@ -42,10 +48,7 @@ Messages will be sent in JSON form (due to its conciseness and ubiquity as a dat
     3. User1 sends their public key to User2
     4. User2 sends their public key to User1
 2. Establish a session key
-    1. User1 generates a symmetric key and encrypts it with User2's public key
-    2. User1 sends the encrypted symmetric key to User2
-    3. User2 decrypts the encrypted symmetric key
-    4. User1 and User2 both store the session key locally
+    1. Local private key combined with remote public key to create session key
 3. Compose message
 4. Encrypt the message
     1. User1 writes a message
@@ -70,11 +73,10 @@ Messages will be sent in JSON form (due to its conciseness and ubiquity as a dat
 ### Server logic
 
 1. Receive message
-2. Check if user present in database
-    1. If yes, move onto the next step
-    1. If no, add their information and public key
-3. Add message to database
-4. Transmit message to User2
+2. Interpret client request
+  - If registering, add user information to database
+  - If receiving a message, add it to database and relay it to user
+3. Transmit message to User2
 
 ## Classes
 
@@ -87,38 +89,49 @@ Since I want the program to support images and video in addition to plaintext, a
 ![Entity relationship diagram](../assets/erd.png)
 
 - Users
-    * UserID
+    - ! UserID
     - PublicKey
     - Forename
     - Surname
 - Participant
-    * ParticipantID
+    - ! ParticipantID
     - UserID: Users[UserID]
     - Nickname: Users[UserID]
 - Messages
-    * MessageID
+    - ! MessageID
     - MessageHash
     - MediaType
     - Timestamp
     - Signature
 - Conversations
-    * ConversationID
+    - !ConversationID
     - Sender: Participants[ParticipantID]
     - Receipient: Participants[ParticipantID]
     - MessageID
 
 ## Functions
 
+### Client
+
 ```
-generateKeyPair() -> (publicKey, privateKey)
-generateSessionKey() -> sessionKey
-encryptSessionKey(sessionKey, publicKey) -> sessionKey
-decryptSessionKey(sessionKey, privateKey) -> sessionKey
-generateDigest(messageContents) --> digest
-createSignature(digest, privateKey) --> signature
-decodeSignature(signature, publicKey) --> digest
-buildMessage(data, mediaType) -> message
-sendMessage(message, destination)
-encryptMessage(message, sessionKey) -> message
-decryptMessage(message, sessionKey) -> message
+Keyring.genKeys()
+Keyring.createExchangePair() -> exchangeKeyPair
+Keyring.createSigningPair(localPrivateKey, remotePublicKey) -> signingKeyPair
+Keyring.createSessionKey(localPrivateKey, remotePublicKey) -> sessionKey
+Keyring.import()
+Keyring.export()
+
+Message.initialize(data, mediaType, sessionKey, signingKeyPair)
+Message.convert(data, sessionKey) -> data
+Message.sign(privateKey) -> signature
+Message.verifySignature(signingKeyPair) -> bool
+Message.send()
+
+DataSocket.initialize(hostname)
+```
+
+### Server
+
+```
+handle_client(TcpStream)
 ```
