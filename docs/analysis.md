@@ -12,31 +12,36 @@ With the growing importance of technology in our world, it is important that peo
 
 - SMS
 
-SMS is a basic set of protocols with no built-in support for encryption and many disadvantages: it does not support rich text formatting, is carrier-dependent, is designed to only support very short messages, and is declining in usage. All of these things considered, I believe using such a restrictive technology as a serious means of secure communication would be a mistake as users are likely to become frustrated and miss the convenience and additional features offered by other applications.
+SMS is a basic set of protocols with no built-in support for encryption, extreme character limits, and no rich text formatting. Additionally, it is carrier-dependent and declining in usage. All of this considered, I believe it is a poor option for text messaging in general and secure communication even more so. Users are likely to be frustrated by the lack of features and convenient security provided in other applications.
 
-An app called Silence offers the ability to send encrypted SMS messages between its users at a level of security similar to other encrypted messengers. It does not require an internet connection but this comes at the cost of depending on the carrier. Although the implementation of the program is good, the underlying limitations of SMS listed above make this solution a poor fit for many situations.
+An app called Silence offers the ability to encrypt SMS messages but it does not solve the inherent problems with the system. To use it, all parties need to have the app installed or else they will see garbled text. Since this idea isn't standardised across SMS clients, those unfamiliar with encryption will be confused and likely put off from using it.
 
 #### Encrypted but with some disadvantages
 
 - iMessage: uses end-to-end encryption but can only be used between Apple devices
 - Facebook Messenger: encrypted but feature not enabled by default
 - Telegram: same Facebook Messenger
-- Encrypted email: often difficult for the average user to set up
+- Encrypted email: difficult for the average user to set up
 
-Some attempts at creating a secure messenger have been quite successful: iMessage achieves both the goals of being secure and simple to use but unfortunately is not usable by everyone due to the Apple device restriction.  However, it does deserve praise for making encrypted messaging very painless for its users; you need no knowledge of what encryption is or how it works to be able to use it.
 
-Both Telegram and Facebook Messenger offer end-to-end encryption through a 'secret chat' feature. Unfortunately, these are not enabled by default so many users either won't know about their existence, what they do, or will simply forgo using them for convenience.
+Some attempts at creating a secure messenger have been quite successful: iMessage is both end-to-end encrypted and simple to use. Unfortunately, it comes with the major disadvantage of only being usable on Apple products.
 
-Email is not an encrypted system by design but asymmetric encryption is often used to fill this purpose through PGP. This approach has seen moderate success with its main limiting factor being difficulty to use: users must generate a key pair and manually distribute public keys with people they want to talk to. If the user does not understand how the system works, they can accidentally share the wrong key and not only nullify the whole process but also frustrate themselves. As a result, PGP encryption is mostly utilised by technical users and carries a high barrier for entry for others. Some clients and email providers can simplify the process but it is far from universally accessible.
+Both Telegram and Facebook Messenger offer end-to-end encryption through a 'secret chat' feature. However, these are not enabled by default so many users either won't know about their existence, what they do, or will simply forgo using them for convenience.
+
+Email itself is not an encrypted system by design but PGP is often used to provide asymmetric encryption. This approach has seen moderate success and is largely held back by obscurity and how cumbersome it is to use; users must generate their own key pair and manually distribute their public keys to people they wish to talk to. If a user does not understand the system, they can share the wrong key and nullify all security. The high barrier for entry restricts email encryption mostly to technical users. Some clients try to make this easier but due to the nature of email it is unlikely to ever be universally accessible.
 
 #### Encrypted and easy to use
 
-- WhatsApp
 - Signal
+- WhatsApp
 
-The Signal protocol is perhaps the industry standard for secure messaging; it is used by both WhatsApp and Signal (the app for which it was made). In addition to using a mixture of cryptographically secure algorithms, it also offers perfect forward secrecy which means that, if a secret key is compromised at any point in time, all past conversations will remain confidential.
+The Signal protocol is perhaps the industry standard for secure messaging; it is used by both WhatsApp and Signal itself. In addition to using a mixture of cryptographically secure algorithms, it also offers perfect forward secrecy which means that, if a secret key is compromised at any point in time, all past conversations will remain confidential.
 
-Both apps are simple to use and require no knowledge of computer encryption to send a simple message. Since both fulfil my criteria for a good encrypted messenger, my program simply aims to be an alternative.
+The Signal app itself is does not require the user to understand how encryption works in order to use it, providing a good user experience. In addition, it is open source which allows security experts to independently scrutinise it for issues.
+
+While WhatsApp's end-to-end encryption is easy to use, it collects a lot of personal user data and is run by Facebook, which many users consider untrustworthy. Since those looking to keep their messages private often desire the same for their personal data, WhatsApp is not a desirable option for everyone.
+
+As you can see, good encrypted messaging apps do exist but there are currently quite few of them. My app aims to be one of the options to provide users with an uncomplicated experience.
 
 ## The user
 

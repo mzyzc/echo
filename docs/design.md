@@ -2,21 +2,21 @@
 
 ## Design decisions
 
-One objective for this program is working on several platforms. Implementing a native client for every platform individually would require a lot of work and duplicated effort so I have decided to use a cross-platform toolkit called Flutter to create an iOS, Android, and web app.
+One objective for this program is to be cross-platform. As implementing a native client for each platform would require a lot of work and duplicated effort, I have chosen to use a UI toolkit called Flutter to create iOS, Android, and web apps.
 
-A centralised server will be used for the system so that clients are able to communicate with each other using the same server. Centralisation offers the advantage of making the system easier to manage and allows communication to occur in a platform-agnostic way.
+A centralised server will be used to make management easier and allow communication to occur in a platform-agnostic way.
 
 ![Client-server architecture](../assets/client-server.png)
 
-The server will be written in the Rust programming language due to its strict memory checking features, high performance, and multithreading support. I believe these properties complement the server's important role of managing data swiftly and with minimal errors. My client will be written in Dart as this is the language used by the Flutter toolkit; the final Dart code will be compiled to each platforms native application language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
+The server will be written in the Rust programming language due to its strict memory checking features, good performance, and multithreading support. I believe these properties complement the server's role well since speed and reliability is crucial here. The client will be written in Dart because this is the language used by the Flutter toolkit. When the program is compiled, the Dart code will be converted to each platform's native language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
 
 At the core of the system lies the asymmetric method of encryption. Each user will generate a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but can be slow due to its complexity.
 
-The specific algorithms I will use are x25519 for exchange and ed25519 for signing. These both come from the elliptic-curve family of algorithms which, compared to Rivest-Shamir-Adleman (RSA), are much faster at converting data and use far smaller key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. My reason for choosing these two over other elliptic-curve algorithms is that implementations of them are available in almost all languages.
+The specific algorithms I will use are x25519 for exchange and ed25519 for signing. These both come from the elliptic-curve family of algorithms which, compared to Rivest-Shamir-Adleman (RSA), are fast at converting data and use very small key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. My reason for choosing these two over other elliptic-curve algorithms is that they are implemented in almost all languages.
 
 ![Generating a key pair](../assets/key-pair.png)
 
-To solve this problem, I will use a separate 'session key' to encrypt and decrypt individual messages instead of using the key pairs directly. Since it is obtained via the key pairs, it inherits a lot of the benefits of asymmetric cryptography while being much faster and less computationally-expensive.
+To solve the speed problem, I will use a separate 'session key' to encrypt and decrypt individual messages. Since it is obtained via the key pairs, it inherits a lot of the benefits of asymmetric cryptography while being much faster and less computationally-expensive.
 
 Instead of generating a completely new key and sharing it between users, I am instead creating it from the recipient's private key and the sender's public key. The benefit of this is not having to pass the key across a network, reducing overhead and making it immune to man-in-the-middle interception.
 
@@ -26,7 +26,7 @@ As an extra layer of security against man-in-the-middle attacks, the program ver
 
 ![Creating a signature](../assets/create-sig.png)
 
-Once the user receives the message, they can create their own digest and compare it to the decrypted form of the digest they received (using the sender's public key).
+Once the user receives the message, they can create their own hash and compare it to the decrypted form of the digest they received (using the sender's public key).
 
 ![Verifying a signature](../assets/verify-sig.png)
 
@@ -34,7 +34,7 @@ When the client initialises, it will create a persistent TCP connection with the
 
 Clients will encode messages in JSON form (due to its ubiquity as a data exchange format) and send them over a secure TLS connection. The server has no knowledge of the precise contents of the messages it receives and will only move them in and out of the database. This keeps the data secure even if the server was to be compromised.
 
-On the server, a TCP listener is bound to port 63100 (not used in any major software). It accepts incoming connections asynchronously (to maximise performance) and continuously polls the client (every 500 ms) to maintain a connection. Echo uses the MySQL database which the server will connect to when initialising. Data will be read from or written to this database depending on what the client is asking for.
+On the server, a TCP listener is bound to port 63100 (not used in any major software). It accepts incoming connections asynchronously (to maximise performance) and continuously polls the client (every 500 ms) to maintain a connection. Echo connects to a PostgreSQL database upon initialising and will read or write data to it based on the client's requests.
 
 ## Process
 
@@ -89,25 +89,20 @@ Since I want the program to support images and video in addition to plaintext, a
 ![Entity relationship diagram](../assets/erd.png)
 
 - Users
-    - ! UserID
+    - **UserID**
     - PublicKey
-    - Forename
-    - Surname
-- Participant
-    - ! ParticipantID
-    - UserID: Users[UserID]
-    - Nickname: Users[UserID]
+    - DisplayName
 - Messages
-    - ! MessageID
-    - MessageHash
+    - **MessageID**
+    - Data
     - MediaType
     - Timestamp
     - Signature
+    - Conversation: Conversations[ConversationID]
 - Conversations
-    - !ConversationID
-    - Sender: Participants[ParticipantID]
-    - Receipient: Participants[ParticipantID]
-    - MessageID
+    - **ConversationID**
+    - Sender: Users[UserID]
+    - Receipient: Users[UserID]
 
 ## Functions
 
