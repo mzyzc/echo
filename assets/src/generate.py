@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""
+This script is part of the Echo secure messenger project
+It is used to generate diagrams and graphs from Mermaid text files en masse
+Mermaid source files should be in the same directory as this script
+The images will be generated one directory above
+"""
+
 import os
 
 initial_dir = os.getcwd()
