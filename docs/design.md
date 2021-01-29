@@ -1,5 +1,27 @@
 # Design
 
+## Dependencies
+
+The following libraries were used for features too complex, tedious, or irrelevant to implement myself. Since security is a major goal of this project, I have chosen to use professional and well-tested cryptographic algorithms instead of creating my own (likely insecure) versions.
+
+### Server
+
+- **argon2** to hash user passwords
+- **async-std** to allow code to run asynchronously
+- **async\_tls** and **rustls** to establish secure TLS connections
+- **base64** to decode binary data
+- **dotenv** to simplify configuring the application
+- **env\_logger** and **log** for more informative logging
+- **getrandom** for generating random data
+- **sqlx** for interacting with a database
+- **serde** for converting data from JSON
+
+### Client
+
+- **Flutter** for building the GUI
+- **path\_provider** to access the filesystem
+- **cryptography\_flutter** for encrypting data across multiple platforms
+
 ## Design decisions
 
 One objective for this program is to be cross-platform. As implementing a native client for each platform would require a lot of work and duplicated effort, I have chosen to use a UI toolkit called Flutter to create iOS, Android, and web apps.
@@ -34,11 +56,27 @@ When the client initialises, it will create a persistent TCP connection with the
 
 Clients will encode messages in JSON form (due to its ubiquity as a data exchange format) and send them over a secure TLS connection. The server has no knowledge of the precise contents of the messages it receives and will only move them in and out of the database. This keeps the data secure even if the server was to be compromised.
 
+## Communicating with the server
+
+Echo uses a custom JSON-based protocol that specifies an function along with its corresponding operands:
+
+```
+{
+  'function': 'CREATE USER',
+  'email': 'john@example.com',
+  'password': 'p@$$w0rd',
+  'displayName': 'John Doe',
+  'publicKey': 'VGhpcyBpcyBhIHN0cmluZyB1c2VkIGluIHRoZSBFY2hvIGRvY3VtZW50YXRpb24='
+}
+```
+
+The function is made up of an operation and a target. All the operations (excluding VERIFY) correspond to a CRUD action. JSON was chosen because of its ubiquity as a data exchange format. Although the password is sent in plaintext, security is not compromised because the server communicates through secure TCP connections.
+
 On the server, a TCP listener is bound to port 63100 (not used in any major software). It accepts incoming connections asynchronously (to maximise performance) and continuously polls the client (every 500 ms) to maintain a connection. Echo connects to a PostgreSQL database upon initialising and will read or write data to it based on the client's requests.
 
 ## Process
 
-### Client logic
+### Client
 
 #### Sending
 
@@ -70,7 +108,7 @@ On the server, a TCP listener is bound to port 63100 (not used in any major soft
 3. Display message
     1. If signature could not be verified, display a warning to the user
 
-### Server logic
+### Server
 
 1. Receive message
 2. Interpret client request
