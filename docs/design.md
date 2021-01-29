@@ -24,23 +24,23 @@ The following libraries were used for features too complex, tedious, or irreleva
 
 ## Design decisions
 
-One objective for this program is to be cross-platform. As implementing a native client for each platform would require a lot of work and duplicated effort, I have chosen to use a UI toolkit called Flutter to create iOS, Android, and web apps.
+One of the objectives for this project is to be cross-platform. It is not feasible to create a native client for every individual platform due to time constraints and duplicated effort. As an alternative, I have chosen a UI toolkit called Flutter which I can use to create native applications for iOS, Android, and the web.
 
-A centralised server will be used to make management easier and allow communication to occur in a platform-agnostic way.
+A centralised server will be used to simplify data management and allow communications to happen easily across multiple clients.
 
 ![Client-server architecture](../assets/client-server.png)
 
-The server will be written in the Rust programming language due to its strict memory checking features, good performance, and multithreading support. I believe these properties complement the server's role well since speed and reliability is crucial here. The client will be written in Dart because this is the language used by the Flutter toolkit. When the program is compiled, the Dart code will be converted to each platform's native language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
+The server will be written in the Rust programming language due to its strict memory checking features, good performance, and multithreading support. I believe these properties complement the server's role well since speed and reliability is crucial for such a component. The client will be written in Dart because this is the language used by the Flutter toolkit. When the program is compiled, this code will be converted to each platform's native language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
 
-At the core of the system lies the asymmetric method of encryption. Each user will generate a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but can be slow due to its complexity.
+At the core of the system lies the asymmetric method of encryption. Each user will generate a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but can be slow due to its complexity. The private key will be kept locally on the user's device while the public key will simply be stored on the remote database.
 
-The specific algorithms I will use are x25519 for exchange and ed25519 for signing. These both come from the elliptic-curve family of algorithms which, compared to Rivest-Shamir-Adleman (RSA), are fast at converting data and use very small key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. My reason for choosing these two over other elliptic-curve algorithms is that they are implemented in almost all languages.
+The specific algorithms I will use are x25519 for encryption and ed25519 for signing. These both come from the elliptic-curve family of algorithms which, compared to Rivest-Shamir-Adleman (RSA), are fast at converting data and use very small key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. My reason for choosing these two over other elliptic-curve algorithms is that they are implemented in almost all languages, making it easier to implement new clients in the future if required.
 
 ![Generating a key pair](../assets/key-pair.png)
 
-To solve the speed problem, I will use a separate 'session key' to encrypt and decrypt individual messages. Since it is obtained via the key pairs, it inherits a lot of the benefits of asymmetric cryptography while being much faster and less computationally-expensive.
+To solve the speed problem, I will use an independent 'session key' to encrypt and decrypt individual messages. It is derived from the key pairs, hence it inherits a lot of the benefits of asymmetric cryptography while being much faster and less computationally-expensive.
 
-Instead of generating a completely new key and sharing it between users, I am instead creating it from the recipient's private key and the sender's public key. The benefit of this is not having to pass the key across a network, reducing overhead and making it immune to man-in-the-middle interception.
+The session key is derived from the recipient's private key and the sender's public key. The benefit of this approach is that the key does not need to be passed over a network, reducing transmission overhead and making it completely immune to man-in-the-middle interception.
 
 ![Encrypting a message with a session key](../assets/encrypt-message.png)
 
@@ -52,27 +52,30 @@ Once the user receives the message, they can create their own hash and compare i
 
 ![Verifying a signature](../assets/verify-sig.png)
 
-When the client initialises, it will create a persistent TCP connection with the server that will stay open until the app is closed. I chose this approach because of its simplicity; the server does not have to keep track of who connects to it or initiate connections with them.
+## Operation
+
+When the client initialises, it creates a persistent TLS connection with the server which will stay open until the app is closed. This simplifies communication because the server does not have to keep track of who connects to it or initiates connections with it; clients simply request the information they need through the existing connection without any additional authentication necessary.
 
 Clients will encode messages in JSON form (due to its ubiquity as a data exchange format) and send them over a secure TLS connection. The server has no knowledge of the precise contents of the messages it receives and will only move them in and out of the database. This keeps the data secure even if the server was to be compromised.
 
-## Communicating with the server
+On the server, a TCP listener is bound to port 63100 (not used in any major software). It accepts incoming connections asynchronously and continuously polls the client (every 500 ms, by default) in order to maintain a connection and acknowledge requests. Upon initialisation, it connects to a PostgreSQL database and accesses it according to the client's requests.
 
-Echo uses a custom JSON-based protocol that specifies an function along with its corresponding operands:
+Data sent over the network follows a custom JSON-based protocol which specifies a function along with necessary operands:
 
 ```
 {
   'function': 'CREATE USER',
   'email': 'john@example.com',
   'password': 'p@$$w0rd',
-  'displayName': 'John Doe',
   'publicKey': 'VGhpcyBpcyBhIHN0cmluZyB1c2VkIGluIHRoZSBFY2hvIGRvY3VtZW50YXRpb24='
 }
 ```
 
+The function is made up of an operation and a target. The five possible operations include all the CRUD actions and an additional one called VERIFY.
+
 The function is made up of an operation and a target. All the operations (excluding VERIFY) correspond to a CRUD action. JSON was chosen because of its ubiquity as a data exchange format. Although the password is sent in plaintext, security is not compromised because the server communicates through secure TCP connections.
 
-On the server, a TCP listener is bound to port 63100 (not used in any major software). It accepts incoming connections asynchronously (to maximise performance) and continuously polls the client (every 500 ms) to maintain a connection. Echo connects to a PostgreSQL database upon initialising and will read or write data to it based on the client's requests.
+JSON was chosen because of its ubiquity as a data exchange format. Base64 is used to encode binary data because it is more concise than a byte array (less data to transfer over the network) and quite popular for this purpose.
 
 ## Process
 
@@ -116,31 +119,47 @@ On the server, a TCP listener is bound to port 63100 (not used in any major soft
   - If receiving a message, add it to database and relay it to user
 3. Transmit message to User2
 
+## Security
+
+Most data (including messages) is encrypted before being sent to the server. This means the server has no precise knowledge of what it receives and stores it in scrambled form. As a result, the client is the only one who ever sees the plaintext version; no sensitive data is ever transferred over the network or stored in the database.
+
+The exception to this is public information which doesn't benefit from encryption and certain metadata which is useful for the server to correctly identity the information it manages. For example, public keys or the members present in a conversation.
+
+Since the server's API is public, anyone can, in theory, create their own client for this program. As a result, it cannot be assumed that passwords have been hashed prior to transmission and hence this is done on the server. To retain security, the exchange of data happens over a secure TLS connection which keeps passwords safe in transmission and adds an additional layer of protection against man-in-the-middle attacks.
+
 ## Classes
 
 ![Class diagram](../assets/classes.png)
 
-Since I want the program to support images and video in addition to plaintext, a `media_type` must be specified for each message in the standard MIME format so that clients know how to interpret the data.
+Since I want the program to support arbitrary data formats (like images or video) and not only plaintext, a `media_type` is specified for each message. This is formatted in standard MIME format so that clients are able to properly interpret the data.
 
 ## Database structure
 
 ![Entity relationship diagram](../assets/erd.png)
 
+A `participant` is an identity of a user that is specific to a certain conversation.
+
 - Users
-    - **UserID**
+    - **ID**
+    - Email
     - PublicKey
-    - DisplayName
+    - Password
+    - Salt
 - Messages
-    - **MessageID**
+    - **ID**
     - Data
     - MediaType
     - Timestamp
     - Signature
-    - Conversation: Conversations[ConversationID]
+    - Sender: Participants[ID]
+- Participants
+    - **ID**
+    - Name
+    - User: Users[ID]
+    - Conversation: Conversations[ID]
 - Conversations
-    - **ConversationID**
-    - Sender: Users[UserID]
-    - Receipient: Users[UserID]
+    - **ID**
+    - Timestamp
 
 ## Functions
 
@@ -166,5 +185,19 @@ DataSocket.initialize(hostname)
 ### Server
 
 ```
-handle_client(TcpStream)
+handle_connection(stream, tlsAcceptor, dbPool)
+handle_request(data, dbPool, user)
+init_db() -> dbPool
+
+Request.from_json(data)
+RawRequest.decode()
+
+Tls.get_acceptor() -> tlsAcceptor
+Tls.get_cert(path) -> certificate
+Tls.get_key(path) -> privateKey
+
+Password.hash(password, salt) -> password
+Password.is_valid(password) -> bool
+
+Settings.is_enabled() -> bool
 ```
