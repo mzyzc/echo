@@ -136,50 +136,50 @@ I will use the ed25519 algorithm for signing. This is another elliptic-curve-bas
 
 #### Request
 
-    - email
-    - password
+- email
+- password
 
 #### Response
 
-    - success
+- success
 
 ### CREATE USER
 
 #### Request
 
-    - email
-    - password
-    - publicKey
+- email
+- password
+- publicKey
 
 #### Response
 
-    - success
+- success
 
 ### CREATE CONVERSATION
 
 #### Request
 
-    - conversationName
-    - participants
-        - email
+- conversationName
+- participants
+    - email
 
 #### Response
 
-    - success
+- success
 
 ### CREATE MESSAGE
 
 #### Request
 
-    - data
-    - mediaType
-    - timestamp
-    - signature
-    - conversationId
+- data
+- mediaType
+- timestamp
+- signature
+- conversationId
 
 #### Response
 
-    - success
+- success
 
 ### READ CONVERSATION
 
@@ -187,25 +187,26 @@ I will use the ed25519 algorithm for signing. This is another elliptic-curve-bas
 
 #### Response
 
-    - conversations
-        - conversationId
-        - conversationName
+- conversations
+    - conversationId
+    - conversationName
 
 ### READ MESSAGE
 
 #### Request
-    - conversationId
+
+- conversationId
 
 #### Response
 
-    - messages
-        - user
-            - id
-            - displayName
-        - data
-        - mediaType
-        - timestamp
-        - signature
+- messages
+    - user
+        - id
+        - displayName
+    - data
+    - mediaType
+    - timestamp
+    - signature
 
 ## Classes
 
