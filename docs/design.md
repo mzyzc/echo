@@ -16,7 +16,7 @@ One of the objectives for this project is to be cross-platform. It is not feasib
 - **env-logger** and **log** for more informative logging
 - **getrandom** for generating random data
 - **sqlx** for interacting with a database
-- **serde** for converting data from JSON
+- **serde** for converting data to and from JSON
 
 ### Client
 
@@ -43,9 +43,11 @@ Data sent over the network follows a custom JSON-based protocol which specifies 
 ```
 {
   'function': 'CREATE USER',
-  'email': 'john@example.com',
-  'password': 'p@$$w0rd',
-  'publicKey': 'VGhlIEVjaG8gc2VjdXJlIG1lc3Nlbmdlcg=='
+  'users': [{
+    'email': 'john@example.com',
+    'password': 'p@$$w0rd',
+    'publicKey': 'VGhlIEVjaG8gc2VjdXJlIG1lc3Nlbmdlcg=='
+  }]
 }
 ```
 
@@ -132,56 +134,71 @@ I will use the ed25519 algorithm for signing. This is another elliptic-curve-bas
 
 ## API
 
-### VERIFY USER
+### VERIFY USERS
+
+Verifies a user for the current connection. Almost all requests require this to be run first. Unlike most other functions, only one user can be specified here.
 
 #### Request
 
-- email
-- password
+- user
+    - email
+    - password
 
 #### Response
 
 - success
 
-### CREATE USER
+### CREATE USERS
+
+Adds user data to the database. Users don't need to be verified to run this.
 
 #### Request
 
-- email
-- password
-- publicKey
+- user
+    - email
+    - password
+    - publicKey
 
 #### Response
 
 - success
 
-### CREATE CONVERSATION
+### CREATE CONVERSATIONS
+
+Creates a single conversation including the specified users.
 
 #### Request
 
-- conversationName
-- participants
+- conversation
+    - name
+- users
     - email
 
 #### Response
 
 - success
 
-### CREATE MESSAGE
+### CREATE MESSAGES
+
+Adds messages to a conversation.
 
 #### Request
 
-- data
-- mediaType
-- timestamp
-- signature
-- conversationId
+- messages
+    - data
+    - mediaType
+    - timestamp
+    - signature
+- conversation
+    - id
 
 #### Response
 
 - success
 
-### READ CONVERSATION
+### READ CONVERSATIONS
+
+Lists all the conversations the user is a part of.
 
 #### Request
 
@@ -191,7 +208,9 @@ I will use the ed25519 algorithm for signing. This is another elliptic-curve-bas
     - conversationId
     - conversationName
 
-### READ MESSAGE
+### READ MESSAGES
+
+Lists all the messages in a conversation.
 
 #### Request
 
@@ -207,6 +226,21 @@ I will use the ed25519 algorithm for signing. This is another elliptic-curve-bas
     - mediaType
     - timestamp
     - signature
+
+### READ USERS
+
+Lists all the users that are part of a conversation.
+
+#### Request
+
+- conversationId
+
+#### Response
+
+- id
+- email
+- displayName
+- publicKey
 
 ## Classes
 
@@ -236,7 +270,7 @@ A `participant` is an identity of a user that is specific to a certain conversat
 - Participants
     - **ID**
     - Name
-    - User: Users[ID]
+    - Identity: Users[ID]
     - Conversation: Conversations[ID]
 - Conversations
     - **ID**
@@ -254,13 +288,23 @@ Keyring.createSessionKey(localPrivateKey, remotePublicKey) -> sessionKey
 Keyring.import()
 Keyring.export()
 
-Message.initialize(data, mediaType, sessionKey, signingKeyPair)
+Conversation.fromJson(json) -> Conversation
+
+Message.fromJson(json) -> Message
+Message.compose(data, mediaType) -> Message
+Message.fetch(conversationId) -> List<Message>
 Message.convert(data, sessionKey) -> data
 Message.sign(privateKey) -> signature
 Message.verifySignature(signingKeyPair) -> bool
 Message.send()
 
-DataSocket.initialize(hostname)
+User.fromJson(json) -> User
+User.register()
+User.login()
+
+Server.connect(hostname)
+Server.write(data)
+Server.listen() -> List<int>
 ```
 
 ### Server
@@ -268,14 +312,32 @@ DataSocket.initialize(hostname)
 ```
 handle_connection(stream, tlsAcceptor, dbPool)
 handle_request(data, dbPool, user)
+format_response(response) -> String
 init_db() -> dbPool
 
+User.from_json(data)
+Message.from_json(data)
+Conversation.from_json(data)
+
 Request.from_json(data)
-RawRequest.decode()
+Request.verify_users(login, dbPool) -> Response
+Request.create_users(login, dbPool) -> Response
+Request.create_conversations(login, dbPool) -> Response
+Request.create_messages(login, dbPool) -> Response
+Request.read_conversations(login, dbPool) -> Response
+Request.read_messages(login, dbPool) -> Response
+Request.read_users(login, dbPool) -> Response
+
+Response.to_json() -> String
+Response.users_to_json() -> String
+Response.messages_to_json() -> String
+Response.conversations_to_json() -> String
 
 Tls.get_acceptor() -> tlsAcceptor
 Tls.get_cert(path) -> certificate
 Tls.get_key(path) -> privateKey
+
+Login.authenticate(email)
 
 Password.hash(password, salt) -> password
 Password.is_valid(password) -> bool
