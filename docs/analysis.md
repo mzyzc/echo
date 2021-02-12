@@ -51,29 +51,29 @@ The application will contain some features catered towards more advanced users (
 
 ### The interview
 
-**What is your primary method of communicating with others online?**
+What is your primary method of communicating with others online?
 
-I use different apps depending on the person I'm talking to. I think Facebook Messenger is probably the main one.
+> I use different apps depending on the person I'm talking to. I think Facebook Messenger is probably the main one.
 
-**What other methods do you use or have used in the past?**
+What other methods do you use or have used in the past?
 
-Social media, WhatsApp, SMS (when I need to)
+> Social media, WhatsApp, SMS (when I need to)
 
-**Have you ever sent messages or media that you would like to remain private?**
+Have you ever sent messages or media that you would like to remain private?
 
-Yes, of course.
+> Yes, of course.
 
-**Have you ever felt worried about a third party seeing your messages?**
+Have you ever felt worried about a third party seeing your messages?
 
-Sometimes. Depends on what I'm messaging about.
+> Sometimes. Depends on what I'm messaging about.
 
-**Have you ever taken any steps to make your communications safer or more secure?**
+Have you ever taken any steps to make your communications safer or more secure?
 
-I've considered it a few times but things either seem too complicated or not something most people I know would be interested in.
+> I've considered it a few times but things either seem too complicated or not something most people I know would be interested in.
 
-**If so, describe your experience.**
+If so, describe your experience.
 
-I've tried using the 'secret chat' feature in Facebook Messenger before but it's really annoying to have to switch back and forth.
+> I've tried using the 'secret chat' feature in Facebook Messenger before but it's really annoying to have to switch back and forth.
 
 ### My proposed solution
 
