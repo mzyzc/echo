@@ -109,7 +109,7 @@ At the core of the system lies the asymmetric method of encryption. Each user wi
 
 ![Generating a key pair](../assets/key-pair.png)
 
-The specific algorithm I will be using is x25519. This is an elliptic-curve-based algorithm which, compared to Rivest-Shamir-Adleman (RSA), is fast at converting data and uses very small key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. The reason I chose this over other forms of elliptic-curve cryptography is that it is implemented in almost all languages, making it easier to implement new clients in the future if required.
+The specific algorithm I will be using is X25519. This is an elliptic-curve-based algorithm which, compared to Rivest-Shamir-Adleman (RSA), is fast at converting data and uses very small key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. The reason I chose this over other forms of elliptic-curve cryptography is that it is implemented in almost all languages, making it easier to implement new clients in the future if required.
 
 ### Symmetric encryption
 
@@ -119,6 +119,17 @@ The session key is derived from the recipient's private key and the sender's pub
 
 ![Encrypting a message with a session key](../assets/encrypt-message.png)
 
+#### X25519
+
+X25519 is a 128-bit Diffie-Hellman function based on the Curve25519 elliptic curve.
+
+Being a Diffie-Hellman function, X25519 exchanges keys asymmetrically. Each member of the exchange generates a private key and a public key, but both can combine their private key with the other's public key and obtain the same result: a shared secret. This shared secret, once established, can be used a key for ordinary symmetric encryption.
+
+1. Each user starts with a 32-byte private key.
+2. A corresponding 32-byte public key is created by passing the private key and public string 9 into a Curve25519 function.
+3. Shared secret can be computed by combining one user's public key with another user's private key.
+
+Mathematically, Curve25519 uses the Montgomery curve `y^2 = x^3 + 486662x^2 + x` over the prime field defined by the prime number `2^255 - 19`. Montgomery curves are a type of elliptic curve, and they all have an equivalent twisted Edwards curve; in the case of X25519, the Edwards curve is Ed25519 and is used for signatures.
 
 ### Signatures
 
@@ -130,7 +141,13 @@ Once the user receives the message, they can create their own hash and compare i
 
 ![Verifying a signature](../assets/verify-sig.png)
 
-I will use the ed25519 algorithm for signing. This is another elliptic-curve-based algorithm which serves as a counterpart to x25519 and was chosen for the same reasons.
+I will use the Ed25519 algorithm for signing. This is another elliptic-curve-based algorithm which serves as a counterpart to X25519 and was chosen for the same reasons.
+
+#### Ed25519
+
+Ed25519 is the birationally equivalent twisted Edwards curve for Curve25519. Since the two are linked, Ed25519 is used to create signatures for secrets made with X25519.
+
+A nonce (number used once) is a secret value used for every signature to keep the private key unknown.
 
 ## API
 
