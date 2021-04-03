@@ -24,6 +24,24 @@ One of the objectives for this project is to be cross-platform. It is not feasib
 - **cryptography-flutter** for encrypting data across multiple platforms
 - **path-provider** to access the filesystem
 
+## Interface
+
+![Login screen](../assets/ui-login.jpg)
+
+The login screen is simple and doesn't immediately ask for much information. This should help new users get started quickly.
+
+![Conversations screen](../assets/ui-conversations.jpg)
+
+Three elements make up the conversations screen: a header bar, a list of conversations, and a navigation bar at the bottom. The navigation bar was positioned at the bottom because that is the location closest to the thumb, aiding ergonomics.
+
+At the bottom of the list is a small button with a plus symbol on it which is used to start new conversations. This is a fairly traditional UI so it should be familiar to users.
+
+![Messages screen](../assets/ui-messages.jpg)
+
+Each conversation has a messages page with its name on the header bar to help the user keep track of who they are talking to. The bottom of the page has a persistent message box so that participants can start writing at any point in the conversation.
+
+Yet again, this is a common design and users will likely immediately know what to do.
+
 ## Architecture
 
 A centralised server will be used to simplify data management and allow communications to happen easily regardless of the specific client.
