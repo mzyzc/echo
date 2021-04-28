@@ -46,7 +46,7 @@ Yet again, this is a common design and users will likely immediately know what t
 
 A centralised server will be used to simplify data management and allow communications to happen easily regardless of the specific client.
 
-![Client-server architecture](../assets/client-server.png)
+![Client-server architecture](../assets/client-server.svg)
 
 The server will be written in the Rust programming language due to its strict memory checking features, good performance, and multithreading support. I believe these properties complement the server's role well since speed and reliability is crucial for such a component. The client will be written in Dart because this is the language used by the Flutter toolkit. When the program is compiled, this code will be converted to each platform's native language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
 
@@ -125,7 +125,7 @@ Since the server's API is public, anyone can, in theory, create their own client
 
 At the core of the system lies the asymmetric method of encryption. Each user will generate a pair of keys: one for encrypting messages (the public key) and one for decrypting them (the private key). This system makes cracking very difficult but can be slow due to its complexity. The private key will be kept locally on the user's device while the public key will simply be stored on the remote database.
 
-![Generating a key pair](../assets/key-pair.png)
+![Generating a key pair](../assets/key-pair.svg)
 
 The specific algorithm I will be using is X25519. This is an elliptic-curve-based algorithm which, compared to Rivest-Shamir-Adleman (RSA), is fast at converting data and uses very small key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. The reason I chose this over other forms of elliptic-curve cryptography is that it is implemented in almost all languages, making it easier to implement new clients in the future if required.
 
@@ -135,7 +135,7 @@ To solve the speed problem, I will use an independent 'session key' to encrypt a
 
 The session key is derived from the recipient's private key and the sender's public key. The benefit of this approach is that the key does not need to be passed over a network, reducing transmission overhead and making it completely immune to man-in-the-middle interception.
 
-![Encrypting a message with a session key](../assets/encrypt-message.png)
+![Encrypting a message with a session key](../assets/encrypt-message.svg)
 
 #### X25519
 
@@ -153,11 +153,11 @@ Mathematically, Curve25519 uses the Montgomery curve `y^2 = x^3 + 486662x^2 + x`
 
 As an extra layer of security against man-in-the-middle attacks, the program verifies the sender of each message using a digital signature. This is created by encrypting the digest (hashed version of message) with the sender's private key and sending it along with the message.
 
-![Creating a signature](../assets/create-sig.png)
+![Creating a signature](../assets/create-sig.svg)
 
 Once the user receives the message, they can create their own hash and compare it to the decrypted form of the digest they received (using the sender's public key).
 
-![Verifying a signature](../assets/verify-sig.png)
+![Verifying a signature](../assets/verify-sig.svg)
 
 I will use the Ed25519 algorithm for signing. This is another elliptic-curve-based algorithm which serves as a counterpart to X25519 and was chosen for the same reasons.
 
@@ -279,13 +279,13 @@ Lists all the users that are part of a conversation.
 
 ## Classes
 
-![Class diagram](../assets/classes.png)
+![Class diagram](../assets/classes.svg)
 
 Since I want the program to support arbitrary data formats (like images or video) and not only plaintext, a `media_type` is specified for each message. This is formatted in standard MIME format so that clients are able to properly interpret the data.
 
 ## Database structure
 
-![Entity relationship diagram](../assets/erd.png)
+![Entity relationship diagram](../assets/erd.svg)
 
 A `participant` is an identity of a user that is specific to a certain conversation.
 
