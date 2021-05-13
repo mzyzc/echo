@@ -51,29 +51,37 @@ The application will contain some features catered towards more advanced users (
 
 ### The interview
 
+This is an interview with Jack. He works as an architect and does not have a technical background with regards to computers. After hearing news about data breaches and controversial privacy policies of companies whose products he uses, he is interested in how he can keep conversations confidential online.
+
+---
+
 What is your primary method of communicating with others online?
 
 > I use different apps depending on the person I'm talking to. I think Facebook Messenger is probably the main one.
 
+> I use many different apps in order to communicate with my clients. For conversations with family and friends, I think I mostly use Facebook Messenger.
+
 What other methods do you use or have used in the past?
 
-> Social media, WhatsApp, SMS (when I need to)
+> Lots. WhatsApp, various social medias, and even SMS when I have to. I don't have much of a preference, personally.
 
 Have you ever sent messages or media that you would like to remain private?
 
-> Yes, of course.
+> Yes, of course. I frequently sign non-disclosure agreements for work projects and I'm sure everyone involved would like those messages to stay where they are.
 
 Have you ever felt worried about a third party seeing your messages?
 
-> Sometimes. Depends on what I'm messaging about.
+> Yeah, it concerns me. With all this user data getting leaked I feel like its just a matter of time before it happens to me.
 
 Have you ever taken any steps to make your communications safer or more secure?
 
-> I've considered it a few times but things either seem too complicated or not something most people I know would be interested in.
+> Well, I've thought about it but I'm not really sure where to get started. Most things seem too complicated, both for me and everyone else who I'd be using them with.
 
 If so, describe your experience.
 
-> I've tried using the 'secret chat' feature in Facebook Messenger before but it's really annoying to have to switch back and forth.
+> I tried to get some of my contacts to use the 'secret chat' feature in Facebook Messenger. The problem is that it's too much hassle to turn on every time and I often even forget that it's an option.
+
+---
 
 ### My proposed solution
 
@@ -85,7 +93,7 @@ I intend to develop a new messaging app that will make sending messages between 
 - Sending an encrypted message should require minimal effort
 - Be usable on all major platforms (iOS, Android, Windows, macOS, Linux)
 
-During the interview, the user stated that they sometimes wanted their messages to remain secret but the people they communicate with wouldn't be interested. The obvious solution to this is encryption but since switching between encrypted and unencrypted messaging in the middle of a conversation can be cumbersome, it makes the most sense to enable it by default; the user will be able to take advantage of it without having to actively consider enabling it. Likewise, their peers, who may not care as much about secrecy, won't have to put in effort to cooperate.
+During the interview, Jack stated that they sometimes wanted their messages to remain secret but the people they communicate with wouldn't be interested. The obvious solution to this is encryption but since switching between encrypted and unencrypted messaging in the middle of a conversation can be cumbersome, it makes the most sense to enable it by default; the user will be able to take advantage of it without having to actively consider enabling it. Likewise, their peers, who may not care as much about secrecy, won't have to put in effort to cooperate.
 
 One of the major problems the user expressed is secure messaging being "difficult". Addressing this issue is important because privacy is not usually a priority for users but rather something that they desire on occasion. As a result, users can easily give up on it when the process requires too much effort. A good encrypted messenger should make this simple so that the users determination does not run out before they are able to find a solution.
 
