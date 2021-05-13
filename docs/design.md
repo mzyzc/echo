@@ -52,9 +52,15 @@ The server will be written in the Rust programming language due to its strict me
 
 ## Operation
 
-When the client initialises, it creates a persistent TLS connection with the server which will stay open until the app is closed. This simplifies communication because the server does not have to keep track of who connects to it or initiates connections with it; clients simply request the information they need through the existing connection without any additional authentication necessary.
+Once the user opens the client, they are met with a login screen that asks them for their email and password. There are two buttons below that allow the user to either login or register for a new account, the latter option prompting more options to appear.
 
-On the server, a TCP listener is bound to port 63100 (not used in any major software). It accepts incoming connections asynchronously and continuously polls the client (every 500 ms, by default) in order to maintain a connection and acknowledge requests. Upon initialisation, it connects to a PostgreSQL database and accesses it according to the client's requests.
+The user can see whether their input is valid or not based on the outline of the input box. If it turns red, an error message will appear and tell the user the mistake they made. This can happen if an invalid email is used upon registration or if the user tries to login with an account that doesn't exist.
+
+On the server side, a TCP listener is bound to port 63100 (not used in any major software). Incoming connections are accepted asynchronously and maintained by continuously polling the client (every 500 ms, by default). If the client starts returning null responses, the connection is severed and the polling stops. Additionally, the server connects to a PostgreSQL database, which it uses to store persistent user, message, or conversation data.
+
+Immediately after the user opens the app, a TLS connection is made with the server and the lifespan of this connection represents a single 'session' for which a user is logged in. A single connection simplifies communication by easily allowing it to work full duplex; the client and the server both send messages via the same 'pipe', and the server does not need to locate the user to communicate with them (which might be difficult since users can move around an connect from different networks) since the client always initiates them.
+
+Initially, the connection is 'unauthorised'. This means that the only actions the user can take are logging in and registering for a new account. All other requests will be rejected at the server level, preventing alternative clients from bypassing the system. Once a client is logged in, the connection becomes authorised under their user, allowing new actions to be taken without additional authentication.
 
 Data sent over the network follows a custom JSON-based protocol which specifies a function along with necessary operands:
 
@@ -69,7 +75,7 @@ Data sent over the network follows a custom JSON-based protocol which specifies 
 }
 ```
 
-The function is made up of an operation and a target. All the operations (excluding VERIFY) correspond to a CRUD action (CREATE, READ, UPDATE, DELETE). Possible targets include USER, CONVERSATION, and MESSAGE.
+The function is made up of an operation and a target. There are five operations, and four of them correspond to a CRUD action (CREATE, READ, UPDATE, DELETE). The last one is VERIFY, which is used to authenticate users when they log in. Possible targets include USER, CONVERSATION, and MESSAGE.
 
 JSON was chosen because of its ubiquity as a data exchange format. Base64 is used to encode binary data because it is more concise than a byte array (less data to transfer over the network) and consists only of ASCII characters.
 
