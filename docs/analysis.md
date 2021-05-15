@@ -81,23 +81,27 @@ If so, describe your experience.
 
 > I tried to get some of my contacts to use the 'secret chat' feature in Facebook Messenger. The problem is that it's too much hassle to turn on every time and I often even forget that it's an option.
 
+What devices or platforms do you use to communicate on?
+
+> My phone, which is Android, and my Windows laptop. I use my phone more but it's a lot of usage on both still.
+
 ---
 
-### My proposed solution
+### Objectives
 
 I intend to develop a new messaging app that will make sending messages between users as frictionless as possible. These are the criteria that it must achieve:
 
 - Messages must be end-to-end encrypted
 - Encryption must be enabled by default
-- Sending an encrypted message should require minimal technical knowledge
-- Sending an encrypted message should require minimal effort
+- Sending an encrypted message should require minimal technical knowledge and effort
+  - Registering and sending a message should not take more than two minutes of using the app
 - Be usable on all major platforms (iOS, Android, Windows, macOS, Linux)
 
 During the interview, Jack stated that they sometimes wanted their messages to remain secret but the people they communicate with wouldn't be interested. The obvious solution to this is encryption but since switching between encrypted and unencrypted messaging in the middle of a conversation can be cumbersome, it makes the most sense to enable it by default; the user will be able to take advantage of it without having to actively consider enabling it. Likewise, their peers, who may not care as much about secrecy, won't have to put in effort to cooperate.
 
 One of the major problems the user expressed is secure messaging being "difficult". Addressing this issue is important because privacy is not usually a priority for users but rather something that they desire on occasion. As a result, users can easily give up on it when the process requires too much effort. A good encrypted messenger should make this simple so that the users determination does not run out before they are able to find a solution.
 
-Since the program is used for communications, it should aim to maximise the amount of people that are able to access it. The solution to this is to make the app cross-platform so that it is accessible to nearly anyone. Mobile operating systems are a priority due to the nature of the program but many other apps offer a desktop client or web interface as well.
+Since the program is used for communications, it should aim to maximise the amount of people that are able to access it. Jack also said that he uses multiple devices often. The solution to this is to make the app cross-platform so that it is accessible to nearly anyone. Mobile operating systems are a priority due to the nature of the program but many other apps offer a desktop client or web interface as well.
 
 Unfortunately, making an app directly for iOS would be difficult since Apple's requirements for publishing an application to the App Store are very high and they offer no simple way to sideload programs. Hence, I will likely create a web interface for my app to get around this issue.
 
@@ -111,3 +115,195 @@ Unfortunately, making an app directly for iOS would be difficult since Apple's r
 - Simple strip at the bottom including a text box and a voice-messaging icon
 - When the text box is empty, some faded text instructs the user on what to do with it
 - Messages are aligned left or right depending on sender
+
+## Modelling
+
+### Architecture
+
+A centralised server will be used to simplify data management and allow communications to happen easily regardless of the specific client.
+
+![Client-server architecture](../assets/client-server.svg)
+
+The server will be written in the Rust programming language due to its strict memory checking features, good performance, and multithreading support. I believe these properties complement the server's role well since speed and reliability is crucial for such a component. The client will be written in Dart because this is the language used by the Flutter toolkit. When the program is compiled, this code will be converted to each platform's native language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
+
+### Operation
+
+Once the user opens the client, they are met with a login screen that asks them for their email and password. There are two buttons below that allow the user to either login or register for a new account, the latter option prompting more options to appear.
+
+The user can see whether their input is valid or not based on the outline of the input box. If it turns red, an error message will appear and tell the user the mistake they made. This can happen if an invalid email is used upon registration or if the user tries to login with an account that doesn't exist.
+
+On the server side, a TCP listener is bound to port 63100 (not used in any major software). Incoming connections are accepted asynchronously and maintained by continuously polling the client (every 500 ms, by default). If the client starts returning null responses, the connection is severed and the polling stops. Additionally, the server connects to a PostgreSQL database, which it uses to store persistent user, message, or conversation data.
+
+Immediately after the user opens the app, a TLS connection is made with the server and the lifespan of this connection represents a single 'session' for which a user is logged in. A single connection simplifies communication by easily allowing it to work full duplex; the client and the server both send messages via the same 'pipe', and the server does not need to locate the user to communicate with them (which might be difficult since users can move around an connect from different networks) since the client always initiates them.
+
+Initially, the connection is 'unauthorised'. This means that the only actions the user can take are logging in and registering for a new account. All other requests will be rejected at the server level, preventing alternative clients from bypassing the system. Once a client is logged in, the connection becomes authorised under their user, allowing new actions to be taken without additional authentication.
+
+Data sent over the network follows a custom JSON-based protocol which specifies a function along with necessary operands:
+
+```
+{
+  'function': 'CREATE USER',
+  'users': [{
+    'email': 'john@example.com',
+    'password': 'p@$$w0rd',
+    'publicKey': 'VGhlIEVjaG8gc2VjdXJlIG1lc3Nlbmdlcg=='
+  }]
+}
+```
+
+The function is made up of an operation and a target. There are five operations, and four of them correspond to a CRUD action (CREATE, READ, UPDATE, DELETE). The last one is VERIFY, which is used to authenticate users when they log in. Possible targets include USER, CONVERSATION, and MESSAGE.
+
+JSON was chosen because of its ubiquity as a data exchange format. Base64 is used to encode binary data because it is more concise than a byte array (less data to transfer over the network) and consists only of ASCII characters.
+
+### Process
+
+#### Client
+
+##### Sending
+
+1. Exchange key pairs
+    1. User1 generates a key pair
+    2. User2 generates a key pair
+    3. User1 sends their public key to User2
+    4. User2 sends their public key to User1
+2. Establish a session key
+    1. Local private key combined with remote public key to create session key
+3. Compose message
+4. Encrypt the message
+    1. User1 writes a message
+    2. Create a signature
+        1. Message contents are hashed to produce a digest
+        2. User1 encrypts the digest using their private key
+    3. Message encrypted using the session key
+    4. Encrypted message and digest are bundled together
+5. Transmit message to server
+
+##### Receiving
+
+1. Receive message
+    1. User2 decrypts message using the session key
+2. Verify signature
+    1. User2 decrypts digest using User1's public key to produce first digest
+    2. Message contents hashed to produce the second digest
+    3. Check if digests match
+3. Display message
+    1. If signature could not be verified, display a warning to the user
+
+#### Server
+
+1. Receive message
+2. Interpret client request
+  - If registering, add user information to database
+  - If receiving a message, add it to database and relay it to user
+3. Transmit message to User2
+
+### API
+
+#### VERIFY USERS
+
+Verifies a user for the current connection. Almost all requests require this to be run first. Unlike most other functions, only one user can be specified here.
+
+##### Request
+
+- user
+    - email
+    - password
+
+##### Response
+
+- success
+
+#### CREATE USERS
+
+Adds user data to the database. Users don't need to be verified to run this.
+
+##### Request
+
+- user
+    - email
+    - password
+    - publicKey
+
+##### Response
+
+- success
+
+#### CREATE CONVERSATIONS
+
+Creates a single conversation including the specified users.
+
+##### Request
+
+- conversation
+    - name
+- users
+    - email
+
+##### Response
+
+- success
+
+#### CREATE MESSAGES
+
+Adds messages to a conversation.
+
+##### Request
+
+- messages
+    - data
+    - mediaType
+    - timestamp
+    - signature
+- conversation
+    - id
+
+##### Response
+
+- success
+
+#### READ CONVERSATIONS
+
+Lists all the conversations the user is a part of.
+
+##### Request
+
+##### Response
+
+- conversations
+    - conversationId
+    - conversationName
+
+#### READ MESSAGES
+
+Lists all the messages in a conversation.
+
+##### Request
+
+- conversationId
+
+##### Response
+
+- messages
+    - user
+        - id
+        - displayName
+    - data
+    - mediaType
+    - timestamp
+    - signature
+
+#### READ USERS
+
+Lists all the users that are part of a conversation.
+
+##### Request
+
+- conversationId
+
+##### Response
+
+- id
+- email
+- displayName
+- publicKey
+
