@@ -24,102 +24,7 @@ One of the objectives for this project is to be cross-platform. It is not feasib
 - **cryptography-flutter** for encrypting data across multiple platforms
 - **path-provider** to access the filesystem
 
-## Interface
-
-![Login screen](../assets/ui-login.jpg)
-
-The login screen is simple and doesn't immediately ask for much information. This should help new users get started quickly.
-
-![Conversations screen](../assets/ui-conversations.jpg)
-
-Three elements make up the conversations screen: a header bar, a list of conversations, and a navigation bar at the bottom. The navigation bar was positioned at the bottom because that is the location closest to the thumb, aiding ergonomics.
-
-At the bottom of the list is a small button with a plus symbol on it which is used to start new conversations. This is a fairly traditional UI so it should be familiar to users.
-
-![Messages screen](../assets/ui-messages.jpg)
-
-Each conversation has a messages page with its name on the header bar to help the user keep track of who they are talking to. The bottom of the page has a persistent message box so that participants can start writing at any point in the conversation.
-
-Yet again, this is a common design and users will likely immediately know what to do.
-
-## Architecture
-
-A centralised server will be used to simplify data management and allow communications to happen easily regardless of the specific client.
-
-![Client-server architecture](../assets/client-server.svg)
-
-The server will be written in the Rust programming language due to its strict memory checking features, good performance, and multithreading support. I believe these properties complement the server's role well since speed and reliability is crucial for such a component. The client will be written in Dart because this is the language used by the Flutter toolkit. When the program is compiled, this code will be converted to each platform's native language (Java/Kotlin for Android, Swift for iOS, and JavaScript for the web).
-
-## Operation
-
-Once the user opens the client, they are met with a login screen that asks them for their email and password. There are two buttons below that allow the user to either login or register for a new account, the latter option prompting more options to appear.
-
-The user can see whether their input is valid or not based on the outline of the input box. If it turns red, an error message will appear and tell the user the mistake they made. This can happen if an invalid email is used upon registration or if the user tries to login with an account that doesn't exist.
-
-On the server side, a TCP listener is bound to port 63100 (not used in any major software). Incoming connections are accepted asynchronously and maintained by continuously polling the client (every 500 ms, by default). If the client starts returning null responses, the connection is severed and the polling stops. Additionally, the server connects to a PostgreSQL database, which it uses to store persistent user, message, or conversation data.
-
-Immediately after the user opens the app, a TLS connection is made with the server and the lifespan of this connection represents a single 'session' for which a user is logged in. A single connection simplifies communication by easily allowing it to work full duplex; the client and the server both send messages via the same 'pipe', and the server does not need to locate the user to communicate with them (which might be difficult since users can move around an connect from different networks) since the client always initiates them.
-
-Initially, the connection is 'unauthorised'. This means that the only actions the user can take are logging in and registering for a new account. All other requests will be rejected at the server level, preventing alternative clients from bypassing the system. Once a client is logged in, the connection becomes authorised under their user, allowing new actions to be taken without additional authentication.
-
-Data sent over the network follows a custom JSON-based protocol which specifies a function along with necessary operands:
-
-```
-{
-  'function': 'CREATE USER',
-  'users': [{
-    'email': 'john@example.com',
-    'password': 'p@$$w0rd',
-    'publicKey': 'VGhlIEVjaG8gc2VjdXJlIG1lc3Nlbmdlcg=='
-  }]
-}
-```
-
-The function is made up of an operation and a target. There are five operations, and four of them correspond to a CRUD action (CREATE, READ, UPDATE, DELETE). The last one is VERIFY, which is used to authenticate users when they log in. Possible targets include USER, CONVERSATION, and MESSAGE.
-
-JSON was chosen because of its ubiquity as a data exchange format. Base64 is used to encode binary data because it is more concise than a byte array (less data to transfer over the network) and consists only of ASCII characters.
-
-## Process
-
-### Client
-
-#### Sending
-
-1. Exchange key pairs
-    1. User1 generates a key pair
-    2. User2 generates a key pair
-    3. User1 sends their public key to User2
-    4. User2 sends their public key to User1
-2. Establish a session key
-    1. Local private key combined with remote public key to create session key
-3. Compose message
-4. Encrypt the message
-    1. User1 writes a message
-    2. Create a signature
-        1. Message contents are hashed to produce a digest
-        2. User1 encrypts the digest using their private key
-    3. Message encrypted using the session key
-    4. Encrypted message and digest are bundled together
-5. Transmit message to server
-
-#### Receiving
-
-1. Receive message
-    1. User2 decrypts message using the session key
-2. Verify signature
-    1. User2 decrypts digest using User1's public key to produce first digest
-    2. Message contents hashed to produce the second digest
-    3. Check if digests match
-3. Display message
-    1. If signature could not be verified, display a warning to the user
-
-### Server
-
-1. Receive message
-2. Interpret client request
-  - If registering, add user information to database
-  - If receiving a message, add it to database and relay it to user
-3. Transmit message to User2
+## Algorithms
 
 ## Security
 
@@ -173,151 +78,13 @@ Ed25519 is the birationally equivalent twisted Edwards curve for Curve25519. Sin
 
 A nonce (number used once) is a secret value used for every signature to keep the private key unknown.
 
-## API
-
-### VERIFY USERS
-
-Verifies a user for the current connection. Almost all requests require this to be run first. Unlike most other functions, only one user can be specified here.
-
-#### Request
-
-- user
-    - email
-    - password
-
-#### Response
-
-- success
-
-### CREATE USERS
-
-Adds user data to the database. Users don't need to be verified to run this.
-
-#### Request
-
-- user
-    - email
-    - password
-    - publicKey
-
-#### Response
-
-- success
-
-### CREATE CONVERSATIONS
-
-Creates a single conversation including the specified users.
-
-#### Request
-
-- conversation
-    - name
-- users
-    - email
-
-#### Response
-
-- success
-
-### CREATE MESSAGES
-
-Adds messages to a conversation.
-
-#### Request
-
-- messages
-    - data
-    - mediaType
-    - timestamp
-    - signature
-- conversation
-    - id
-
-#### Response
-
-- success
-
-### READ CONVERSATIONS
-
-Lists all the conversations the user is a part of.
-
-#### Request
-
-#### Response
-
-- conversations
-    - conversationId
-    - conversationName
-
-### READ MESSAGES
-
-Lists all the messages in a conversation.
-
-#### Request
-
-- conversationId
-
-#### Response
-
-- messages
-    - user
-        - id
-        - displayName
-    - data
-    - mediaType
-    - timestamp
-    - signature
-
-### READ USERS
-
-Lists all the users that are part of a conversation.
-
-#### Request
-
-- conversationId
-
-#### Response
-
-- id
-- email
-- displayName
-- publicKey
+## Data structures
 
 ## Classes
 
 ![Class diagram](../assets/classes.svg)
 
 Since I want the program to support arbitrary data formats (like images or video) and not only plaintext, a `media_type` is specified for each message. This is formatted in standard MIME format so that clients are able to properly interpret the data.
-
-## Database structure
-
-![Entity relationship diagram](../assets/erd.svg)
-
-A `participant` is an identity of a user that is specific to a certain conversation.
-
-- Users
-    - **ID**
-    - Email
-    - PublicKey
-    - Password
-    - Salt
-- Messages
-    - **ID**
-    - Data
-    - MediaType
-    - Timestamp
-    - Signature
-    - Sender: Participants[ID]
-- Participants
-    - **ID**
-    - Name
-    - Identity: Users[ID]
-    - Conversation: Conversations[ID]
-- Conversations
-    - **ID**
-    - Timestamp
-
-## Functions
 
 ### Client
 
@@ -385,3 +152,259 @@ Password.is_valid(password) -> bool
 
 Settings.is_enabled() -> bool
 ```
+
+## File structure
+
+### Client
+
+The client file structure looks like this:
+
+```
+.
+├── conversation.dart
+├── keys.dart
+├── main.dart
+├── message.dart
+├── pages
+│   ├── conversations.dart
+│   ├── login.dart
+│   ├── messages.dart
+│   └── settings.dart
+├── response.dart
+├── server.dart
+└── user.dart
+```
+
+App pages are stored under their own `pages` directory to keep the UI and logic mostly separate and avoid naming conflicts.
+
+- `conversation.dart`, `message.dart` and `user.dart` are the three primary classes used by Echo
+- `keys.dart` contains cryptographic details and manages the public and private keys of a user
+- `server.dart` has a class representing the server. It it in the global state and contains some data used throughout the app.
+- `response.dart` is used for representing raw server responses as a structured object.
+
+### Server
+
+The server file structure looks like this:
+
+```
+.
+├── api
+│   ├── request.rs
+│   └── response.rs
+├── api.rs
+├── auth.rs
+├── database.rs
+├── lib.rs
+├── main.rs
+├── settings.rs
+├── sql
+│   ├── create-conversation-1.sql
+│   ├── create-conversation-2.sql
+│   ├── create-message.sql
+│   ├── create-user.sql
+│   ├── read-conversation.sql
+│   ├── read-message.sql
+│   ├── read-user.sql
+│   ├── tables
+│   │   ├── conversations.sql
+│   │   ├── drop.sql
+│   │   ├── messages.sql
+│   │   ├── participants.sql
+│   │   └── users.sql
+│   └── verify-user.sql
+└── tls.rs
+```
+
+The project mainly consists of a library `lib.rs`, with a thin wrapper `main.rs` for the executable. All database queries are stored as SQL files in an `sql` directory for organisation purposes.
+
+- `api.rs`, `request.rs`, and `response.rs` implement the three primary data types used by Echo (conversations, messages, and users) and provide methods for storing/retrieving them from the database, converting them to and from JSON, reading requests, and formatting responses.
+- `auth.rs` authenticates uses and manages their accounts. This is where passwords are hashed, salted, stored, and read.
+- `database.rs` provides functions for initialising a database, setting up tables, and dropping tables.
+- `settings.rs` provides helper functions for handling user settings.
+- `tls.rs` provides functions to help in setting up a TLS connection.
+
+## Database design
+
+![Entity relationship diagram](../assets/erd.svg)
+
+A `participant` is an identity of a user that is specific to a certain conversation.
+
+- Users
+    - **ID**
+    - Email
+    - PublicKey
+    - Password
+    - Salt
+- Messages
+    - **ID**
+    - Data
+    - MediaType
+    - Timestamp
+    - Signature
+    - Sender: Participants[ID]
+- Participants
+    - **ID**
+    - DisplayName
+    - Identity: Users[ID]
+    - Conversation: Conversations[ID]
+- Conversations
+    - **ID**
+    - Name
+    - Timestamp
+
+## Queries
+
+```sql
+INSERT INTO conversations (name)
+VALUES ($1)
+
+INSERT INTO participants (identity, conversation)
+VALUES (
+    (SELECT id FROM users WHERE email = $1),
+    (SELECT id FROM conversations WHERE name = $2)
+)
+```
+
+These two queries create a conversation. The first creates the conversation itself and the second adds the initial users to it.
+
+```sql
+INSERT INTO messages (sender, data, media_type, timestamp, signature)
+VALUES (
+    (SELECT participants.id
+    FROM participants
+    JOIN users ON users.id = participants.identity
+    JOIN conversations ON conversations.id = participants.conversation
+    WHERE users.email = $1
+    AND conversations.id = $2),
+    $3, $4, $5, $6
+)
+```
+
+This query creates a message in a conversation.
+
+```sql
+INSERT INTO users (email, public_key, pass, salt)
+VALUES ($1, $2, $3, $4)
+```
+
+This query creates a user.
+
+```sql
+SELECT conversations.id, conversations.name
+FROM conversations
+JOIN participants ON participants.conversation = conversations.id
+WHERE participants.identity = (
+    SELECT id FROM users WHERE email = $1
+)
+```
+
+This query lists all the conversations a user is in.
+
+```sql
+SELECT messages.data, messages.media_type, messages.timestamp, messages.signature, users.email
+FROM messages
+JOIN participants ON participants.id = messages.sender
+JOIN users ON users.id = participants.identity
+JOIN conversations ON conversations.id = participants.conversation
+WHERE (conversations.id = $2)
+AND ($2 IN (
+    SELECT conversation
+    FROM participants
+    JOIN users ON users.id = participants.identity
+    WHERE users.email = $1
+))
+```
+
+This query lists all the messages in a conversation.
+
+```sql
+SELECT users.email, participants.display_name, users.public_key
+FROM users
+JOIN participants ON participants.identity = users.id
+JOIN conversations ON conversations.id = participants.conversation
+WHERE (conversations.id = $2)
+AND ($2 IN (
+    SELECT conversation
+    FROM participants
+    JOIN users ON users.id = participants.identity
+    WHERE users.email = $1
+))
+```
+
+This query lists all the users in a conversation.
+
+```sql
+CREATE TABLE conversations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    timestamp BYTEA
+)
+```
+
+This query creates a table to store conversations.
+
+```sql
+DROP TABLE IF EXISTS messages, participants, conversations, users CASCADE
+```
+
+This query drops all existing tables.
+
+```sql
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    data BYTEA NOT NULL,
+    media_type BYTEA,
+    timestamp BYTEA,
+    signature BYTEA,
+    sender INT references participants(id) NOT NULL
+)
+```
+
+This query creates a table to store messages.
+
+```sql
+CREATE TABLE participants (
+    id SERIAL PRIMARY KEY,
+    display_name VARCHAR(32),
+    identity INT references users(id) NOT NULL,
+    conversation INT references conversations(id) NOT NULL
+)
+```
+
+This query creates a table to link users to conversations.
+
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(50) UNIQUE NOT NULL,
+    public_key BYTEA NOT NULL,
+    pass BYTEA NOT NULL,
+    salt BYTEA NOT NULL
+)
+```
+
+This query creates a table to store users.
+
+## Human-computer interaction
+
+![Login screen](../assets/ui-login.jpg)
+
+The login screen is simple and doesn't immediately ask for much information. This should help new users get started quickly.
+
+![Conversations screen](../assets/ui-conversations.jpg)
+
+Three elements make up the conversations screen: a header bar, a list of conversations, and a navigation bar at the bottom. The navigation bar was positioned at the bottom because that is the location closest to the thumb, aiding ergonomics.
+
+At the bottom of the list is a small button with a plus symbol on it which is used to start new conversations. This is a fairly traditional UI so it should be familiar to users.
+
+![Messages screen](../assets/ui-messages.jpg)
+
+Each conversation has a messages page with its name on the header bar to help the user keep track of who they are talking to. The bottom of the page has a persistent message box so that participants can start writing at any point in the conversation.
+
+Yet again, this is a common design and users will likely immediately know what to do.
+
+## Hardware selection
+
+Since the client is cross-platform, it will work on most common devices. I will specifically test Android, Windows, and Linux since I have easy access to these operating systems.
+
+For development, I'm hosting the server on a Raspberry Pi running Linux. This is because it is a small, cheap, and low-power device which allows me to keep it on for long periods of time to test its resilience and also make sure the server works fast even on weak hardware.
