@@ -1,8 +1,20 @@
 classDiagram
+    class conversation {
+    	-int id
+	-string name
+    }
     class message {
-        -string text
+	-int id
+        -string data
         -string media_type
         -dateTime timestamp
-        -int senderID
         -string signature
+        -int sender_id
+    }
+    class user {
+    	-int id
+	-string email
+	-string display_name
+	-int[] password
+	-int[] public_key
     }
