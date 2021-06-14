@@ -38,6 +38,8 @@ At the core of the system lies the asymmetric method of encryption. Each user wi
 
 ![Generating a key pair](../assets/key-pair.svg)
 
+![Exchanging keys](../assets/key-exchange.svg)
+
 The specific algorithm I will be using is X25519. This is an elliptic-curve-based algorithm which, compared to Rivest-Shamir-Adleman (RSA), is fast at converting data and uses very small key sizes for the same degree of security. This is significant because my application will largely be used on mobile phones which may not have powerful hardware. The reason I chose this over other forms of elliptic-curve cryptography is that it is implemented in almost all languages, making it easier to implement new clients in the future if required.
 
 ### Symmetric encryption

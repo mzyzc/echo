@@ -47,8 +47,6 @@ To summarise, this video confirms the following things:
 
 ## Other details
 
-The client has been tested to work on Android and Linux devices. It is likely to work on iOS and Windows too due to Flutter's cross-platform capabilities. A web version is partially functional but it cannot get past the login screen due to network issues; browsers cannot use normal system TCP sockets so Echo would either need to be modified to use WebSockets or compiled to WebAssembly. Neither of these options are currently implemented but they could reasonably be done in the future.
-
 The server has been running for around a month with moderately frequent activity and has not been observed to crash or mismanage data in any way.
 
 ## Debugging client

@@ -23,7 +23,6 @@ An app called Silence offers the ability to encrypt SMS messages but it does not
 - Telegram: same Facebook Messenger
 - Encrypted email: difficult for the average user to set up
 
-
 Some attempts at creating a secure messenger have been quite successful: iMessage is both end-to-end encrypted and simple to use. Unfortunately, it comes with the major disadvantage of only being usable on Apple products.
 
 Both Telegram and Facebook Messenger offer end-to-end encryption through a 'secret chat' feature. However, these are not enabled by default so many users either won't know about their existence, what they do, or will simply forgo using them for convenience.
@@ -56,8 +55,6 @@ This is an interview with Jack. He works as an architect and does not have a tec
 ---
 
 What is your primary method of communicating with others online?
-
-> I use different apps depending on the person I'm talking to. I think Facebook Messenger is probably the main one.
 
 > I use many different apps in order to communicate with my clients. For conversations with family and friends, I think I mostly use Facebook Messenger.
 
@@ -306,4 +303,3 @@ Lists all the users that are part of a conversation.
 - email
 - displayName
 - publicKey
-

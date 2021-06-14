@@ -2,23 +2,25 @@
 
 ## Did the project achieve its goals?
 
-Overall, the project was on an excellent trajectory to achieving its goal of providing a secure and easy-to-use messenger.
+Overall, the project was on an excellent trajectory to achieving its goal of providing a secure and easy-to-use messenger but fell short in some very important aspects.
 
 The app is both easy to use and makes use of strong encryption techniques. However, decryption is only partially implemented. As a result, all received messages appear to be garbled to the user.
 
 ### Capabilities and ease of use
 
-As far as enabling users to send end-to-end encrypted messages easily and securely, the project has been a resounding success. Correct behaviour has been verified for both the server and the client programs.
+As far as enabling users to send end-to-end encrypted messages easily and securely, the project has been a partial success. Correct behaviour has been verified for both the server and the client programs when it comes to encryption and passing data around, but unfortunately decryption is still a work-in-progress.
 
-The client is capable of encrypting, decrypting, signing, and validating the signatures of a foreign message---not held back by any technical barriers. All the encryption details have been hidden from the user, offering an uncomplicated experience. The server responds quickly so latency between sending an receiving a message is low.
+The client is capable of encrypting, decrypting, signing, and validating the signatures of a foreign messages for remote parties---not held back by any technical barriers. All the encryption details have been hidden from the user, offering an uncomplicated experience. The server responds quickly so latency between sending an receiving a message is low.
 
 ### Platform support
 
 The project's goal of being multi-platform is not currently achieved due to two major reasons: Flutter applications on the web and the desktop are currently either in beta or under active development, meaning they could definitely exist in the future once those platforms are supported. Secondly, the browser cannot interact with system sockets directly so the web version of the client is able to *run,* but not interact with the server. Both of these issues are fixable either through time or some additional development.
 
-The project's' goal of being multi-platform has also been achieved. Both the Android and Linux versions of the app have been tested to work and this likely extends to iOS and Windows as well, at the least. This is enough platform coverage for most people to be able to access it.
+The project's goal of being multi-platform has also been achieved. The client has been tested to work on Android, Windows, and Linux devices. It is likely to work on iOS and macOS too due to Flutter's cross-platform capabilities, but I can't confirm this since I don't have access to either device.
 
 However, the desktop versions are offered to Flutter via a beta setting. This is most likely going to change without any changes from me as a developer, but it is worth noting for the moment.
+
+As for the browser, it cannot interact with system TCP sockets directly, so the web version of the client is able to *run*, but not interact with the server. Both of these issues are fixable either through time or some additional development. This was not a required platform in the original goals.
 
 ### Additional features
 
@@ -35,6 +37,8 @@ There is currently a singleton being used in the client application for communic
 ## For the future
 
 If I was going to develop this project again, I would do more research of the technologies I am using in advance. This would allow me to get to working faster without having to spend as much time learning about the theory of what I'm doing.
+
+Decryption has only been partially implemented; code exists to do it but passing the keys around conversations of more than two members is a challenge I have not yet been able to solve. In retrospect, I should have considered this more in the analysis phase.
 
 The program is missing many convenience features which users might expect in a modern messaging application. This was not a strict goal in the original analysis, but it would definitely be a consideration if the project was going to continue development or be rewritten.
 
@@ -55,5 +59,3 @@ How easy was it to create an account on Echo?
 What devices did you use the app on and how was your experience on each?
 
 > I have an Android phone and a Windows laptop that I installed Echo on. Both worked perfectly as far as navigating the app goes and I didn't encounter any errors. The Windows version looks a bit odd though; it definitely seems like something made for a phone.
-
-
